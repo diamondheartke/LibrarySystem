@@ -3,106 +3,136 @@
 import sqlite3
 import sys
 
-class DataBase:
+class Database:
 	def __init__(self, db_file, subjects):
+		self.subj = subjects
+
 		self.conn = sqlite3.connect(db_file)
 		self.c = self.conn.cursor()
-		
-		self.subj = subjects
-		
-	def database_check(self):
-		sys.stdout.writelines('[INFO] Performing Database Check....')
+
+	def create_tables(self):
+		''' Creates tables if they do not exist'''
+		tables = [
+			{'books': {
+				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
+				'book_id': 'INTEGER UNIQUE, ',
+				'title': 'TEXT, ',
+				'subject': 'TEXT, ',
+				'author': 'TEXT, ',
+				'isbn': 'TEXT, ',
+				'status': 'TEXT'
+				}
+
+		},
+			{'users': {
+				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
+				'name': 'TEXT, ',
+				'user_id': 'INTEGER UNIQUE'
+				}
+
+		},
+			{'borrow_records': {
+				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
+				'book_id': 'INTEGER UNIQUE, ',
+				'user_id': 'INTEGER UNIQUE, ',
+				'borrow_date': 'TEXT, ',
+				'return_date': 'TEXT'
+				}
+
+		}
+	]
+
+		current_tables = []
+		table_values = ''
 		try:
-			for subj in self.subj:
-				self.c.execute(f'''CREATE TABLE {subj} (
-				id INTEGER PRIMARY KEY AUTOINCREMENT, 
-				token INTEGER UNIQUE,
-				assigned INTEGER UNIQUE,
-				type TEXT
-			) 
-		''')  
+			for i, x in enumerate(tables):
+				for table, value in x.items():
+					current_tables.append(table)
+					for key, val in value.items():
+						table_values += f'{key} {val}'
+				print(table_values)
+				self.c.execute(f"CREATE TABLE {table} ({table_values})")
+				table_values = ''
 		except sqlite3.OperationalError as e:
-			sys.stderr.writelines(f'[ERROR] Error creating table: {e}')
+			print(f'[ERROR] Error creating table \'{current_tables[len(current_tables)-1]}\': {e}', file=sys.stderr)
 		finally:
-			sys.stdout.writelines('\n[INFO] Database Check Complete.')
-			
-	def insert_data(self, data):
+			self.conn.commit()
+
+	def insert_book_records(self, data):
+		'''
+		data format:
+			{
+				'book_id': 'INTEGER UNIQUE',
+				'title': 'TEXT',
+				'subject': 'TEXT',
+				'author': 'TEXT',
+				'isbn': 'TEXT',
+				'status': 'TEXT'
+			}
+		'''
+		table = data['table']
+		if table not in self.subj:
+			raise ValueError('Invalid subject table')
+
 		try:
-			self.c.execute(f'''INSERT INTO {data['table']}(token, assigned, type)
-			values(?, ?, ?)''', (data['token'], data['assigned'], data['type']))
+			self.c.execute(f'''INSERT INTO {data['table']}
+							(token, assigned, type)
+							values(?, ?, ?)''',
+							(data['token'], data['assigned'], data['type'])
+			)
 		except sqlite3.IntegrityError as e:
-			sys.stderr.writelines(f'[ERROR] Error inserting value: {e}')
-		except sqlite3.ProgrammingError as e:
-			sys.stderr.writelines(f'[ERROR] Error inserting value: {e}')
+			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
 		finally:
-			sys.stdout.writelines(f"[INFO] Initiated inserted data to {data['table']}")
+			print(f"[INFO] Initiated inserted data to {data['table']}", file=sys.stderr)
 			self.conn.commit()
-			
-	def remove_data(self, data):
+
+	def delete_data(self, table, token):
+		if table not in self.subj:
+			raise ValueError('Invalid subject')
 		try:
-			self.execute(f"DELETE FROM {data['table']} WHERE token{data['token']}")
-		except AttributeError:
-			pass
+			self.execute(f"DELETE FROM {table} WHERE token=?", (token,))
+		except Exception as e:
+			print(f'[ERROR] Failed to delete {token}: {e}', file=sys.stderr)
 		finally:
-			sys.stdout.writelines(f"[INFO] Intiated deleted data from {data['table']}")
 			self.conn.commit()
-			
-	def display_db(self, subject):
+
+	def get_all(self, subject):
+		if subject not in self.subj:
+			raise ValueError('Invalid subject')
+
 		self.c.execute(f'SELECT * FROM {subject}')
+
 		return self.c.fetchall()
-		
-	def database_search(self, data):
+
+	def search(self, table, column, value):
+		if table not in self.subj:
+			raise ValueError('Invalid subject table')
+
+		allowed_columns = ["id", "token", "assigned", "type"]
+
+		if column not in allowed_columns:
+			raise ValueError('Invalid search column')
+
 		try:
-			self.c.execute(f"SELECT * FROM {data['table']} WHERE token=? OR assigned=? OR type=?", (data['token'], data['assigned'], data['type']))
+			self.c.execute(f"SELECT * FROM {table} WHERE {column}=?", (value,))
 			return self.c.fetchall()
-		except AttributeError:
-			pass
-		finally:
-			sys.stdout.writelines(f"[INFO] Initiated searched for data from {data['table']}")
-			return None
-			
-	def update_database(self, data):
-		self.c.execute()
 
-if __name__ == '__main__':
-	dummy_db = 'test.db'
-	dummy_subjects = ['English', 'Math', 'Computer', 'Science', 'Other']
-	dummy_data = {
-		1: {'table': 'English',
-		'token': 10669,
-		'assigned': 'Diamond Ebenyo',
-		'type': 'KLB'},
-		2: {'table': 'English',
-		'token': 10670,
-		'assigned': 'Raymond Ebenyo',
-		'type': 'KLB'},
-		3: {'table': 'English',
-		'token': 10668,
-		'assigned': 'Roy Chirchir',
-		'type': 'KLB'},
-		4: {'table': 'English',
-		'token': 10667,
-		'assigned': 'Dancan Kibet',
-		'type': 'KLB'},
-		5: {'table': 'English',
-		'token': 10665,
-		'assigned': 'Random Person',
-		'type': 'KLB'}
-	}
-	
-	db = DataBase(dummy_db, dummy_subjects)
-	
-	db.database_check()
-	
-	for key in dummy_data.keys():
-		data = dummy_data[key]
-		db.insert_data(data)
-	
-	for subj in dummy_subjects:
-		print(f"{'-'*50} \n{subj} {'-'*50}")
-		for data in db.display_db(subj):
-			print(data)
+		except Exception as e:
+			print(f'[ERROR] Search failed: {e}')
 
-	db.remove_data({'table': 'English', 'token': 10668})
-	check = db.database_search({'table': 'English', 'token': 10669, 'type': 'KLB', 'assigned': 'Diamond Ebenyo'}) if not None else 'Empty'
-	print(check)
+	def update(self, table, column, value):
+		if table not in self.subj:
+			raise ValueError('Invalid subject table')
+
+		allowed_columns = ["id", "token", "assigned", "type"]
+
+		if column not in allowed_columns:
+			raise ValueError('Invalid search column')
+
+		try:
+			self.c.execute(f'UPDATE {table} SET {column}=?', (value,))
+		except Exception as e:
+			print(f'[ERROR] Failed to update {column}: {e}', file=sys.stderr)
+
+	def close(self):
+		self.conn.close()

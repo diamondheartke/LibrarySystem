@@ -9,13 +9,17 @@ import time
 
 class LibrarySystem:
 	def __init__(self):
-		self.write_logs('launch_time', 500)
+		self.event_logs('launch_time', 500)
 		self.config = self.load_config()
 		
 		self.db = self.config['database']
-		self.DataBase = DataBase(self.database)
+		self.subjects = self.config['subjects']
 		
-	def write_logs(self, log, status_code):
+		self.DataBase = DataBase('test.db', self.subjects)
+		
+		self.search = self.DataBase.database_search({'table': 'English', 'token': 10669})
+		
+	def event_logs(self, log, status_code):
 		actions = {
 			'launch_time': f"Launching: status code {status_code} - {time.ctime()}\n{'-'*70}",
 			'config_file': f'Loading: status code {status_code} - {time.ctime()}'
@@ -41,7 +45,7 @@ class LibrarySystem:
 		''' Loads the configuration file (config.json)'''
 		config_file = 'config.json'
 		if os.path.exists(config_file) and os.path.getsize(config_file):
-			self.write_logs('config_file', 500)
+			self.event_logs('config_file', 500)
 			with open(config_file, 'r', encoding='utf-8') as f:
 				sys.stdout.writelines('[INFO] Successfully Loaded Configuration File.')
 				return json.load(f)
@@ -51,15 +55,15 @@ class LibrarySystem:
 			sys.stderr.writelines('[ERROR] Configuration File \'config.json\' Is Missing or Corrupted.')
 			prompt = input('\nProceed with fallback configuration file (y|n): ').lower()
 			if prompt == 'y':
-				self.write_logs('config_file', 200)
+				self.event_logs('config_file', 200)
 				with open(config_file, 'w', encoding='utf-8') as f:
-					data = {'version': 'v1.0.0', 'database': 'data/database.db'}
+					data = {'version': 'v1.0.0', 'database': 'data/database.db', 'subjects': ['English', 'Math', 'Computer', 'Science', 'Other']}
 					json.dump(data, f, ensure_ascii=False, indent=4)
 					sys.stdout.writelines('[INFO] Successfully Created Fallback Configuration File.')
 					
 			elif prompt == 'n':
 				sys.stderr.writelines('[ERROR] Failed To Create Fallback Configuration File.')
-				self.write_logs('config_file', 100)
+				self.event_logs('config_file', 100) # I don't know the exact status codes, but this are placeholders
 				
 			else:
 				sys.stdout.writelines('\'y\' or \'n\'')

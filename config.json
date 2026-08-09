@@ -1,4 +1,11 @@
 {
     "version": "v1.0.0",
-    "database": "data/database.db"
+    "database": "data/database.db",
+    "subjects": [
+        "English",
+        "Math",
+        "Computer",
+        "Science",
+        "Other"
+    ]
 }
