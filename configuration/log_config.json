@@ -1,0 +1,56 @@
+{
+    "status_codes": {
+        "info_process_state": {
+            "launch": 100,
+            "close": 101,
+            "load_config": 102,
+            "sql_connection": 103,
+            "validate_tables": 104,
+            "import_modules": 105,
+            "authentication": 106,
+            "database_backup": 107
+        },
+        "successfull_ops": {
+            "generic_success": 200,
+            "new_book": 201,
+            "new_member": 202,
+            "book_update": 203,
+            "book_delete": 204,
+            "loading_success": 205,
+            "sql_connection_success": 206,
+            "search_complete": 207,
+            "transaction_complete": 208
+        },
+        "warnings_recover": {
+            "fallback": 300,
+            "missing_optional": 301,
+            "duplicate_detected": 302,
+            "deprecated_feature": 303,
+            "partial_success": 304,
+            "retry_required": 305
+        },
+        "user_input_config_errors": {
+            "invalid_input": 400,
+            "unauthorized": 401,
+            "permission_denied": 402,
+            "forbidden_action": 403,
+            "not_found": 404,
+            "invalid_config": 405,
+            "missing_required_data": 406,
+            "duplicate_entry": 407,
+            "invalid_ops": 408,
+            "conflict": 409
+        },
+        "system_errors": {
+            "internal_error": 500,
+            "not_implemented": 501,
+            "database_failure": 502,
+            "service_unavailable": 503,
+            "file_system_error": 504,
+            "memory_error": 505,
+            "dependency_failure": 506,
+            "corrupted_data": 507
+        }
+    },
+    "logs_path": "utils/logs"
+}

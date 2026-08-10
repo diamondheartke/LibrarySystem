@@ -1,4 +1,5 @@
 test.* 
 __pycache__/ 
-__init__py 
 __init__.py 
+*.geany
+lS.txt

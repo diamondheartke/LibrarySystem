@@ -4,9 +4,7 @@ import sqlite3
 import sys
 
 class Database:
-	def __init__(self, db_file, subjects):
-		self.subj = subjects
-
+	def __init__(self, db_file):
 		self.conn = sqlite3.connect(db_file)
 		self.c = self.conn.cursor()
 
