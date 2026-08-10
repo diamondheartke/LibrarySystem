@@ -1,17 +1,27 @@
 # database.py
 
+from utils.logger import Logger
+
 import sqlite3
 import sys
 
 class Database:
 	def __init__(self, db_file):
+		self.log = Logger()
+		
+		self.log.event_logs('db_connect', self.log.info['sql_connection'])
+		
 		self.conn = sqlite3.connect(db_file)
 		self.c = self.conn.cursor()
+		
+		self.log.event_logs('db_connect', self.log.success['sql_connection_success'])
+		
+		self.tables = ['books', 'users', 'borrow_records']
 
 	def create_tables(self):
 		''' Creates tables if they do not exist'''
 		tables = [
-			{'books': {
+			{'book_record': {
 				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
 				'book_id': 'INTEGER UNIQUE, ',
 				'title': 'TEXT, ',
@@ -22,7 +32,7 @@ class Database:
 				}
 
 		},
-			{'users': {
+			{'user_records': {
 				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
 				'name': 'TEXT, ',
 				'user_id': 'INTEGER UNIQUE'
@@ -55,6 +65,23 @@ class Database:
 			print(f'[ERROR] Error creating table \'{current_tables[len(current_tables)-1]}\': {e}', file=sys.stderr)
 		finally:
 			self.conn.commit()
+			
+	def insert_user_records(self, data):
+		'''
+		data format:
+			{
+				'name': 'TEXT',
+				'user_id': 'INTEGER UNIQUE'
+			}
+		'''
+		try:
+			self.c.execute('''INSERT INTO user_records 
+							(name, user_id)''',
+							(data['name'], data['user_id']))
+		except sqlite3.IntegrityError as e:
+			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
+		finally:
+			self.conn.commit()
 
 	def insert_book_records(self, data):
 		'''
@@ -68,45 +95,73 @@ class Database:
 				'status': 'TEXT'
 			}
 		'''
-		table = data['table']
-		if table not in self.subj:
-			raise ValueError('Invalid subject table')
-
 		try:
-			self.c.execute(f'''INSERT INTO {data['table']}
-							(token, assigned, type)
-							values(?, ?, ?)''',
-							(data['token'], data['assigned'], data['type'])
+			self.c.execute('''INSERT INTO book_record
+							(book_id, title, subject, author, isbn, status)
+							values(?, ?, ?, ?, ?, ?)''',
+							(data['book_id'], data['title'], data['subject'], data['author'], data['isbn'], data['status'])
 			)
 		except sqlite3.IntegrityError as e:
 			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
 		finally:
-			print(f"[INFO] Initiated inserted data to {data['table']}", file=sys.stderr)
 			self.conn.commit()
-
-	def delete_data(self, table, token):
-		if table not in self.subj:
-			raise ValueError('Invalid subject')
+			
+	def insert_borrow_records(self, data):
+		'''
+		data format:
+			{
+				'book_id': 'INTEGER UNIQUE',
+				'user_id': 'INTEGER UNIQUE',
+				'borrow_date': 'TEXT',
+				'return_date': 'TEXT'
+			}
+		'''
 		try:
-			self.execute(f"DELETE FROM {table} WHERE token=?", (token,))
+			self.c.execute('''INSERT INTO borrow_records
+							(book_id, user_id, borrow_date, return_date)''',
+							(data['book_id'], data['user_id'], data['borrow_date'], data['return_date'])
+				)
+		except sqlite3.IntegrityError as e:
+			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
+		finally:
+			self.conn.commit() 
+
+	def delete_book_record(self, book_id):
+		if not isinstance(book_id, int):
+			self.log.error_logs('delete_book', self.log.use['invalid_input'])
+			raise ValueError('Invalid book_id')
+		try:
+			self.execute(f"DELETE FROM book_records WHERE book_id=?", (book_id,))
 		except Exception as e:
-			print(f'[ERROR] Failed to delete {token}: {e}', file=sys.stderr)
+			print(f'[ERROR] Failed to delete book record - {book_id}: {e}', file=sys.stderr)
+		finally:
+			self.conn.commit()
+			
+	def delete_user_record(self, user_id):
+		if not isinstance(user_id, int):
+			self.log.error_logs('delete_book', self.log.use['invalid_input'])
+			raise ValueError('Invalid book_id')
+		try:
+			self.execute(f"DELETE FROM user_records WHERE user_id=?", (user_id,))
+		except Exception as e:
+			print(f'[ERROR] Failed to delete book record - {user_id}: {e}', file=sys.stderr)
 		finally:
 			self.conn.commit()
 
-	def get_all(self, subject):
-		if subject not in self.subj:
+	def get_all(self, table):
+		if table not in self.tables:
 			raise ValueError('Invalid subject')
 
 		self.c.execute(f'SELECT * FROM {subject}')
 
 		return self.c.fetchall()
+		
 
 	def search(self, table, column, value):
-		if table not in self.subj:
+		if table not in self.tables:
 			raise ValueError('Invalid subject table')
 
-		allowed_columns = ["id", "token", "assigned", "type"]
+		allowed_columns = ['book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
 
 		if column not in allowed_columns:
 			raise ValueError('Invalid search column')
@@ -117,6 +172,7 @@ class Database:
 
 		except Exception as e:
 			print(f'[ERROR] Search failed: {e}')
+			
 
 	def update(self, table, column, value):
 		if table not in self.subj:

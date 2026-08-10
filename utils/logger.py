@@ -91,7 +91,7 @@ class Logger:
 		else:
 			with open(config_file, 'w', encoding='utf-8') as f:
 				json.dump(data, f, ensure_ascii=False, indent=4)
-				return self.load_json(config_file)
+			return self.load_json(config_file)
 	
 	def event_logs(self, log, status_code):
 		log_file = 'event_log.txt'
@@ -99,7 +99,8 @@ class Logger:
 		
 		events = {
 			'launch_time': f"Launching: status code {status_code} - {time.ctime()}\n{'-'*70}",
-			'config_file': f'Loading Configuration file: status code {status_code} - {time.ctime()}'
+			'config_file': f'Loading Configuration file: status code {status_code} - {time.ctime()}',
+			'db_connect': f'Connecting database: status code {status_code} - {time.ctime()}'
 		}
 		
 		for key, val in events.items():
@@ -136,15 +137,12 @@ class Logger:
 		path = os.path.join(self.logs_path, log_file)
 		
 		errors = {
-			'error': f'Error - status code {status_code}' # placeholder
+			'delete_book': f'Deleting book - status code {status_code}' 
 		}
 		
 		for key, val in errors.items():
 			if key == log:
-				if key == 'launch_time':
-					log = f"\n\n{'-'*70}\n[Event] {key} - {val}"
-				else:
-					log = f'\n[Event] {key} - {val}'
+				log = f'\n[Error] {key} - {val}'
 			
 		if os.path.exists(path):
 			with open(path, 'a', encoding='utf-8') as f:

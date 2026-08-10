@@ -15,6 +15,9 @@ class Engine:
 		self.log.event_logs('launch_time', self.log.info['launch'])
 		
 		self.config = self.load_config()
+		if isinstance(self.config, dict):
+			sys.stdout.write('[INFO] Configuration file successfully loaded.')
+			self.log.event_logs('config_file', self.log.success['loading_success'])
 		
 		self.db = self.config['database']
 		
@@ -43,7 +46,7 @@ class Engine:
 					self.log.event_logs('config_file', self.log.warning['fallback'])
 					sys.stdout.write('[INFO] Successfully Created Fallback Configuration File.')
 					self.log.event_logs('config_file', self.log.info['load_config'])
-					return self.load_json(config_file)
+				return self.load_json(config_file)
 					
 			elif prompt == 'n':
 				sys.stderr.write('[ERROR] Failed To Create Fallback Configuration File.')
