@@ -1,7 +1,0 @@
-
-[Event] Created log.txt - Mon Aug 10 11:28:03 2026
-
-----------------------------------------------------------------------
-[Event] launch_time - Launching: status code 500 - Mon Aug 10 11:28:03 2026
-----------------------------------------------------------------------
-[Event] config_file - Loading: status code 500 - Mon Aug 10 11:28:03 2026

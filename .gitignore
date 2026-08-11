@@ -4,3 +4,4 @@ __init__.py
 *.geany
 lS.txt
 dummy.* 
+tests/test_database.db 

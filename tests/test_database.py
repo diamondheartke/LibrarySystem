@@ -1,26 +1,85 @@
 # tests/test_database.py
 
-import sys
 import os
+import sys
+import datetime
 
-path = sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+today = datetime.date.today()
+tomorrow = today+datetime.timedelta(days=1)
+tomorrow2 = today+datetime.timedelta(days=2)
 
-from database import Database
+#print('today:', today)
+#print('tomorrow:', tomorrow)
+#print('tomorrow2:', tomorrow2)
 
-DB_FILE = "test_database.db"
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+wdir = os.path.join(dname, '..')
+os.chdir(wdir)
+
+print('Current working directory set to:', os.getcwd())
+
+for i in ['database', 'utils']:
+	sys.path.append(os.path.join(os.getcwd(), 'database'))
+
+from database.database import Database
+
+DB_FILE = "tests/test_database.db"
 
 
-subjects = [
-	"English",
-	"Math",
-	"Computer",
-	"Science",
-	"Other"
+tables = ['book_records', 'user_records', 'borrow_records']
+
+dummy_book_data = [
+	{
+		'book_id': 1,
+		'title': 'Science in Action',
+		'subject': 'Biology',
+		'author': 'Diamond Heart',
+		'isbn': 'null',
+		'status': 'new'
+	},
+	
+	{
+		'book_id': 2,
+		'title': 'Physics 2',
+		'subject': 'Physics',
+		'author': 'Robert Mitei',
+		'isbn': 'null',
+		'status': 'old'
+	}
 ]
 
-
-dummy_data = [
+dummy_user_data = [
+	{
+		'user_id': 10669,
+		'name': 'Diamond Ebenyo'
+	},
 	
+	{
+		'user_id': 10670,
+		'name': 'Raymond Ebenyo'
+	},
+	
+	{
+		'user_id': 10668,
+		'name': 'Roy Chirchir'
+	}
+]
+
+dummy_borrow_data = [
+	{
+		'book_id': 1,
+		'user_id': 10670,
+		'borrow_date': today,
+		'return_date': tomorrow
+	},
+	
+	{
+		'book_id': 2,
+		'user_id': 10668,
+		'borrow_date': tomorrow,
+		'return_date': tomorrow2
+	}
 ]
 
 
@@ -32,41 +91,50 @@ def run_test():
 		os.remove(DB_FILE)
 
 
-	db = Database(DB_FILE, subjects)
+	db = Database(DB_FILE)
 
 	print("Creating tables...")
 	db.create_tables()
 	
+	print("Inserting Book data...")
+	for item in dummy_book_data:
+		db.insert_book_records(item)
 
-	print("Inserting data...")
-	for item in dummy_data:
-		db.insert_data(item)
-		
+	print("Inserting User data...")
+	for item in dummy_user_data:
+		db.insert_user_records(item)
 
-	print("\nEnglish table:")
-	rows = db.get_all("English")
+	print("Inserting Borrowing data...")
+	for item in dummy_borrow_data:
+		db.insert_borrow_records(item)
+
+	print("\nUser table:")
+	rows = db.get_all("user_records")
 
 	for row in rows:
 		print(row)
 		
-	print('\nMath table:')
-	rows = db.get_all('Math')
+	print('\nBook table:')
+	rows = db.get_all('book_records')
 	
 	for row in rows:
 		print(row)
 		
-	print('\nComputer table')
-	rows = db.get_all('Computer')
+	print('\nBorrow table')
+	rows = db.get_all('borrow_records')
 	
 	for row in rows:
 		print(row)
 
 	print("\nSearching token 10669:")
-	result = db.search("English", "token", 10669)
+	result = db.search("user_records", "user_id", 10669)
 
 	print(result[0])
 
 	db.close()
+	
+	os.remove(DB_FILE)
+	print('\nRemoved test_database.db')
 
 if __name__ == "__main__":
 	run_test()

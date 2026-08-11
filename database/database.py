@@ -16,12 +16,12 @@ class Database:
 		
 		self.log.event_logs('db_connect', self.log.success['sql_connection_success'])
 		
-		self.tables = ['books', 'users', 'borrow_records']
+		self.tables = ['book_records', 'user_records', 'borrow_records']
 
 	def create_tables(self):
 		''' Creates tables if they do not exist'''
 		tables = [
-			{'book_record': {
+			{'book_records': {
 				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
 				'book_id': 'INTEGER UNIQUE, ',
 				'title': 'TEXT, ',
@@ -58,7 +58,6 @@ class Database:
 					current_tables.append(table)
 					for key, val in value.items():
 						table_values += f'{key} {val}'
-				print(table_values)
 				self.c.execute(f"CREATE TABLE {table} ({table_values})")
 				table_values = ''
 		except sqlite3.OperationalError as e:
@@ -76,7 +75,8 @@ class Database:
 		'''
 		try:
 			self.c.execute('''INSERT INTO user_records 
-							(name, user_id)''',
+							(name, user_id)
+							values(?, ?)''',
 							(data['name'], data['user_id']))
 		except sqlite3.IntegrityError as e:
 			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
@@ -96,7 +96,7 @@ class Database:
 			}
 		'''
 		try:
-			self.c.execute('''INSERT INTO book_record
+			self.c.execute('''INSERT INTO book_records
 							(book_id, title, subject, author, isbn, status)
 							values(?, ?, ?, ?, ?, ?)''',
 							(data['book_id'], data['title'], data['subject'], data['author'], data['isbn'], data['status'])
@@ -118,7 +118,8 @@ class Database:
 		'''
 		try:
 			self.c.execute('''INSERT INTO borrow_records
-							(book_id, user_id, borrow_date, return_date)''',
+							(book_id, user_id, borrow_date, return_date)
+							values(?, ?, ?, ?)''',
 							(data['book_id'], data['user_id'], data['borrow_date'], data['return_date'])
 				)
 		except sqlite3.IntegrityError as e:
@@ -150,16 +151,16 @@ class Database:
 
 	def get_all(self, table):
 		if table not in self.tables:
-			raise ValueError('Invalid subject')
+			raise ValueError('Invalid table')
 
-		self.c.execute(f'SELECT * FROM {subject}')
+		self.c.execute(f'SELECT * FROM {table}')
 
 		return self.c.fetchall()
 		
 
 	def search(self, table, column, value):
 		if table not in self.tables:
-			raise ValueError('Invalid subject table')
+			raise ValueError('Invalid table')
 
 		allowed_columns = ['book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
 
@@ -176,7 +177,7 @@ class Database:
 
 	def update(self, table, column, value):
 		if table not in self.subj:
-			raise ValueError('Invalid subject table')
+			raise ValueError('Invalid table')
 
 		allowed_columns = ["id", "token", "assigned", "type"]
 
