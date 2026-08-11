@@ -52,17 +52,17 @@ dummy_book_data = [
 dummy_user_data = [
 	{
 		'user_id': 10669,
-		'name': 'Diamond Ebenyo'
+		'user_name': 'Diamond Ebenyo'
 	},
 	
 	{
 		'user_id': 10670,
-		'name': 'Raymond Ebenyo'
+		'user_name': 'Raymond Ebenyo'
 	},
 	
 	{
 		'user_id': 10668,
-		'name': 'Roy Chirchir'
+		'user_name': 'Roy Chirchir'
 	}
 ]
 
@@ -126,7 +126,28 @@ def run_test():
 	for row in rows:
 		print(row)
 
-	print("\nSearching token 10669:")
+	print("\nSearching user_id 10669:")
+	result = db.search("user_records", "user_id", 10669)
+
+	print(result[0])
+	
+	print('\nSearching book_id 1:')
+	result = db.search('book_records', 'book_id', 1)
+	
+	print(result[0])
+	
+	print('\nDeleting user_id 10668:')
+	db.delete_user_record(10668)
+	
+	rows = db.get_all("user_records")
+
+	print('\nDisplaying user records:')
+	for row in rows:
+		print(row)
+		
+	print('\nUpdating user records - 10669:')
+	db.update('user_records', 'user_name', 'Diamond Heart Ebenyo')
+	
 	result = db.search("user_records", "user_id", 10669)
 
 	print(result[0])

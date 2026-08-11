@@ -34,7 +34,7 @@ class Database:
 		},
 			{'user_records': {
 				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
-				'name': 'TEXT, ',
+				'user_name': 'TEXT, ',
 				'user_id': 'INTEGER UNIQUE'
 				}
 
@@ -69,15 +69,15 @@ class Database:
 		'''
 		data format:
 			{
-				'name': 'TEXT',
+				'user_name': 'TEXT',
 				'user_id': 'INTEGER UNIQUE'
 			}
 		'''
 		try:
 			self.c.execute('''INSERT INTO user_records 
-							(name, user_id)
+							(user_name, user_id)
 							values(?, ?)''',
-							(data['name'], data['user_id']))
+							(data['user_name'], data['user_id']))
 		except sqlite3.IntegrityError as e:
 			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
 		finally:
@@ -143,7 +143,7 @@ class Database:
 			self.log.error_logs('delete_book', self.log.use['invalid_input'])
 			raise ValueError('Invalid book_id')
 		try:
-			self.execute(f"DELETE FROM user_records WHERE user_id=?", (user_id,))
+			self.c.execute(f"DELETE FROM user_records WHERE user_id=?", (user_id,))
 		except Exception as e:
 			print(f'[ERROR] Failed to delete book record - {user_id}: {e}', file=sys.stderr)
 		finally:
@@ -176,10 +176,10 @@ class Database:
 			
 
 	def update(self, table, column, value):
-		if table not in self.subj:
+		if table not in self.tables:
 			raise ValueError('Invalid table')
 
-		allowed_columns = ["id", "token", "assigned", "type"]
+		allowed_columns = ['book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
 
 		if column not in allowed_columns:
 			raise ValueError('Invalid search column')
