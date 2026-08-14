@@ -5,3 +5,4 @@ __init__.py
 lS.txt
 dummy.* 
 tests/test_database.db 
+*.sublime-* 

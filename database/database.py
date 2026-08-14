@@ -19,51 +19,66 @@ class Database:
 		self.tables = ['book_records', 'user_records', 'borrow_records']
 
 	def create_tables(self):
-		''' Creates tables if they do not exist'''
-		tables = [
-			{'book_records': {
-				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
-				'book_id': 'INTEGER UNIQUE, ',
-				'title': 'TEXT, ',
-				'subject': 'TEXT, ',
-				'author': 'TEXT, ',
-				'isbn': 'TEXT, ',
-				'status': 'TEXT'
-				}
+		'''Creates tables with proper foreign key constraints.'''
+		
+		# Enforce foreign key constraints in SQLite
+		self.c.execute("PRAGMA foreign_keys = ON;")
 
-		},
-			{'user_records': {
-				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
-				'user_name': 'TEXT, ',
-				'user_id': 'INTEGER UNIQUE'
-				}
-
-		},
-			{'borrow_records': {
-				'id': 'INTEGER PRIMARY KEY AUTOINCREMENT, ',
-				'book_id': 'INTEGER UNIQUE, ',
-				'user_id': 'INTEGER UNIQUE, ',
-				'borrow_date': 'TEXT, ',
-				'return_date': 'TEXT'
-				}
-
+		tables = {
+			"book_records": """
+				CREATE TABLE IF NOT EXISTS book_records (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					book_id INTEGER UNIQUE NOT NULL,
+					title TEXT NOT NULL,
+					subject TEXT,
+					author TEXT,
+					isbn TEXT,
+					status TEXT DEFAULT 'available'
+				);
+			""",
+			"user_records": """
+				CREATE TABLE IF NOT EXISTS user_records (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER UNIQUE NOT NULL,
+					user_name TEXT NOT NULL
+				);
+			""",
+			"borrow_records": """
+				CREATE TABLE IF NOT EXISTS borrow_records (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					book_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					borrow_date TEXT NOT NULL,
+					due_date TEXT NOT NULL,
+					return_date TEXT,
+					status TEXT DEFAULT 'active',
+					FOREIGN KEY (book_id) REFERENCES book_records(book_id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES user_records(user_id) ON DELETE CASCADE
+				);
+			"""
 		}
-	]
 
-		current_tables = []
-		table_values = ''
 		try:
-			for i, x in enumerate(tables):
-				for table, value in x.items():
-					current_tables.append(table)
-					for key, val in value.items():
-						table_values += f'{key} {val}'
-				self.c.execute(f"CREATE TABLE {table} ({table_values})")
-				table_values = ''
-		except sqlite3.OperationalError as e:
-			print(f'[ERROR] Error creating table \'{current_tables[len(current_tables)-1]}\': {e}', file=sys.stderr)
-		finally:
+			for table_name, query in tables.items():
+				self.c.execute(query)
 			self.conn.commit()
+			print("[INFO] All database tables created successfully.")
+			
+		except sqlite3.OperationalError as e:
+			print(f'[ERROR] Error creating database tables: {e}', file=sys.stderr)
+			
+		except Exception as e:
+			print(f'[ERROR] Unexpected error: {e}', file=sys.stderr)
+			
+	'''
+	Eliminates String Manipulation Bugs: No trailing commas or invalid SQL string generation.
+
+Readable & Maintainable: Schema changes are plain SQL and easy to inspect.
+
+Idempotent (IF NOT EXISTS): Safe to run on app startup without crashing if tables already exist.
+
+PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borrow_records, book_records, and user_records.
+	'''
 			
 	def insert_user_records(self, data):
 		'''

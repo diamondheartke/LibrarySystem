@@ -17,10 +17,10 @@ dname = os.path.dirname(abspath)
 wdir = os.path.join(dname, '..')
 os.chdir(wdir)
 
-print('Current working directory set to:', os.getcwd())
+if wdir not in sys.path:
+	sys.path.append(wdir)
 
-for i in ['database', 'utils']:
-	sys.path.append(os.path.join(os.getcwd(), 'database'))
+print('Current working directory set to:', os.getcwd())
 
 from database.database import Database
 

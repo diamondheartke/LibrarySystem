@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBRARY — Digital Catalog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#" class="brand">
+                <span class="brand-title">LIBRARY</span>
+                <span class="brand-subtitle">Digital Catalog</span>
+            </a>
+            <nav class="nav-links">
+                <a href="#" class="nav-link active">Catalog</a>
+                <a href="#" class="nav-link">My Loans</a>
+                <a href="#" class="nav-link">Admin Panel</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="btn btn-primary">Sign In</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="badge">CURATED KNOWLEDGE BASE</span>
+            <h1 class="hero-title">Empowering Education Through Digital Access</h1>
+            <p class="hero-description">
+                Explore thousands of curated academic works, research papers, and timeless literature from anywhere in the world.
+            </p>
+
+            <form class="search-box" action="/api/books/" method="GET">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" placeholder="Search by title, author, subject, or ISBN..." name="q" required>
+                </div>
+                <button type="submit" class="btn btn-accent">Search Library</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="stats-strip">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-number">12,400+</span>
+                <span class="stat-label">Books Cataloged</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">850+</span>
+                <span class="stat-label">Active Borrowers</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">24/7</span>
+                <span class="stat-label">Digital Discovery</span>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="section-header">
+            <h2>Recently Added Books</h2>
+            <a href="#" class="view-all-link">View All &rarr;</a>
+        </div>
+
+        <div class="book-grid">
+            
+            <article class="book-card">
+                <div class="image-container">
+                    <img src="{{ url_for('static', filename='assets/book-cover-1.jpg') }}" 
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';" 
+                         alt="Science in Action Cover">
+                    <span class="status-badge available">Available</span>
+                </div>
+                <div class="card-content">
+                    <span class="category">Biology</span>
+                    <h3 class="book-title">Science in Action</h3>
+                    <p class="book-author">By Diamond Heart</p>
+                    <button class="btn btn-outline">Borrow Copy</button>
+                </div>
+            </article>
+
+            <article class="book-card">
+                <div class="image-container">
+                    <img src="{{ url_for('static', filename='assets/book-cover-2.jpg') }}" 
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80';" 
+                         alt="Physics 2 Cover">
+                    <span class="status-badge on-loan">On Loan</span>
+                </div>
+                <div class="card-content">
+                    <span class="category">Physics</span>
+                    <h3 class="book-title">Physics Principles</h3>
+                    <p class="book-author">By Robert Mitei</p>
+                    <button class="btn btn-disabled" disabled>Reserve</button>
+                </div>
+            </article>
+
+            <article class="book-card">
+                <div class="image-container">
+                    <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80" alt="Architectural History Cover">
+                    <span class="status-badge available">Available</span>
+                </div>
+                <div class="card-content">
+                    <span class="category">Architecture</span>
+                    <h3 class="book-title">Architectural Heritage</h3>
+                    <p class="book-author">By Elena Vance</p>
+                    <button class="btn btn-outline">Borrow Copy</button>
+                </div>
+            </article>
+
+            <article class="book-card">
+                <div class="image-container">
+                    <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80" alt="World History Cover">
+                    <span class="status-badge available">Available</span>
+                </div>
+                <div class="card-content">
+                    <span class="category">History</span>
+                    <h3 class="book-title">Chronicles of Civilization</h3>
+                    <p class="book-author">By Marcus Thorne</p>
+                    <button class="btn btn-outline">Borrow Copy</button>
+                </div>
+            </article>
+
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
