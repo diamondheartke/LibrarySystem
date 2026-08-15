@@ -8,19 +8,19 @@ import sys
 class Database:
 	def __init__(self, db_file):
 		self.log = Logger()
-		
+
 		self.log.event_logs('db_connect', self.log.info['sql_connection'])
-		
+
 		self.conn = sqlite3.connect(db_file)
 		self.c = self.conn.cursor()
-		
+
 		self.log.event_logs('db_connect', self.log.success['sql_connection_success'])
-		
+
 		self.tables = ['book_records', 'user_records', 'borrow_records']
 
 	def create_tables(self):
 		'''Creates tables with proper foreign key constraints.'''
-		
+
 		# Enforce foreign key constraints in SQLite
 		self.c.execute("PRAGMA foreign_keys = ON;")
 
@@ -63,13 +63,13 @@ class Database:
 				self.c.execute(query)
 			self.conn.commit()
 			print("[INFO] All database tables created successfully.")
-			
+
 		except sqlite3.OperationalError as e:
 			print(f'[ERROR] Error creating database tables: {e}', file=sys.stderr)
-			
+
 		except Exception as e:
 			print(f'[ERROR] Unexpected error: {e}', file=sys.stderr)
-			
+
 	'''
 	Eliminates String Manipulation Bugs: No trailing commas or invalid SQL string generation.
 
@@ -79,7 +79,7 @@ Idempotent (IF NOT EXISTS): Safe to run on app startup without crashing if table
 
 PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borrow_records, book_records, and user_records.
 	'''
-			
+
 	def insert_user_records(self, data):
 		'''
 		data format:
@@ -89,7 +89,7 @@ PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borr
 			}
 		'''
 		try:
-			self.c.execute('''INSERT INTO user_records 
+			self.c.execute('''INSERT INTO user_records
 							(user_name, user_id)
 							values(?, ?)''',
 							(data['user_name'], data['user_id']))
@@ -120,49 +120,49 @@ PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borr
 			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
 		finally:
 			self.conn.commit()
-			
+
 	def insert_borrow_records(self, data):
 		'''
 		data format:
 			{
-				'book_id': 'INTEGER UNIQUE',
-				'user_id': 'INTEGER UNIQUE',
-				'borrow_date': 'TEXT',
-				'return_date': 'TEXT'
+				book_id INTEGER NOT NULL,
+				user_id INTEGER NOT NULL,
+				borrow_date TEXT NOT NULL,
+				due_date TEXT NOT NULL,
+				return_date TEXT,
+				status TEXT DEFAULT 'active',
 			}
 		'''
 		try:
 			self.c.execute('''INSERT INTO borrow_records
-							(book_id, user_id, borrow_date, return_date)
-							values(?, ?, ?, ?)''',
-							(data['book_id'], data['user_id'], data['borrow_date'], data['return_date'])
+							(book_id, user_id, borrow_date, due_date, return_date, status)
+							values(?, ?, ?, ?, ?, ?)''',
+							(data['book_id'], data['user_id'], data['borrow_date'], data['due_date'], data.get('return_date'), data.get('status', 'active'))
 				)
 		except sqlite3.IntegrityError as e:
 			print(f'[ERROR] Error inserting value: {e}', file=sys.stderr)
 		finally:
-			self.conn.commit() 
+			self.conn.commit()
 
 	def delete_book_record(self, book_id):
 		if not isinstance(book_id, int):
-			self.log.error_logs('delete_book', self.log.use['invalid_input'])
+			self.log.error_logs('delete_book', self.log.user_error['invalid_input'])
 			raise ValueError('Invalid book_id')
 		try:
-			self.execute(f"DELETE FROM book_records WHERE book_id=?", (book_id,))
+			self.c.execute(f"DELETE FROM book_records WHERE book_id=?", (book_id,))
+			self.conn.commit()
 		except Exception as e:
 			print(f'[ERROR] Failed to delete book record - {book_id}: {e}', file=sys.stderr)
-		finally:
-			self.conn.commit()
-			
+
 	def delete_user_record(self, user_id):
 		if not isinstance(user_id, int):
-			self.log.error_logs('delete_book', self.log.use['invalid_input'])
-			raise ValueError('Invalid book_id')
+			self.log.error_logs('delete_user', self.log.user_error['invalid_input'])
+			raise ValueError('Invalid user_id')
 		try:
 			self.c.execute(f"DELETE FROM user_records WHERE user_id=?", (user_id,))
-		except Exception as e:
-			print(f'[ERROR] Failed to delete book record - {user_id}: {e}', file=sys.stderr)
-		finally:
 			self.conn.commit()
+		except Exception as e:
+			print(f'[ERROR] Failed to delete user record - {user_id}: {e}', file=sys.stderr)
 
 	def get_all(self, table):
 		if table not in self.tables:
@@ -171,13 +171,13 @@ PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borr
 		self.c.execute(f'SELECT * FROM {table}')
 
 		return self.c.fetchall()
-		
+
 
 	def search(self, table, column, value):
 		if table not in self.tables:
 			raise ValueError('Invalid table')
 
-		allowed_columns = ['book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
+		allowed_columns = ['title', 'book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
 
 		if column not in allowed_columns:
 			raise ValueError('Invalid search column')
@@ -188,19 +188,21 @@ PRAGMA foreign_keys = ON;: Guarantees SQLite enforces relationships between borr
 
 		except Exception as e:
 			print(f'[ERROR] Search failed: {e}')
-			
 
-	def update(self, table, column, value):
+
+	def update(self, table, column, column_id, value, value_id):
 		if table not in self.tables:
 			raise ValueError('Invalid table')
 
-		allowed_columns = ['book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
+		allowed_columns = ['title', 'book_id', 'subject', 'author', 'isbn', 'status', 'user_id', 'user_name', 'borrow_date', 'return_date']
 
-		if column not in allowed_columns:
+		if column not in allowed_columns or column_id not in allowed_columns:
 			raise ValueError('Invalid search column')
 
 		try:
-			self.c.execute(f'UPDATE {table} SET {column}=?', (value,))
+			query = f'UPDATE {table} SET {column}=? WHERE {column_id}=?'
+			self.c.execute(query, (value, value_id))
+			self.conn.commit()	
 		except Exception as e:
 			print(f'[ERROR] Failed to update {column}: {e}', file=sys.stderr)
 

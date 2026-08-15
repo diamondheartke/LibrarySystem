@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Library System...</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #071529;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo-placeholder {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .text {
+            color: #ffffff;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .bar {
+            width: 220px;
+            height: 4px;
+            background: #20324a;
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress {
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                #2563eb,
+                #22c55e
+            );
+            border-radius: 10px;
+            animation: load 1.5s infinite ease-in-out;
+        }
+
+        @keyframes load {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(300%);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Simulated loading delay before redirecting to home
+            setTimeout(() => {
+                window.location.href = "{{ url_for('home') }}";
+            }, 1800);
+        });
+    </script>
+</head>
+
+<body>
+
+    <div class="loader">
+        <div class="logo-placeholder">
+            [ App Name ]
+        </div>
+
+        <div class="text">
+            Loading System...
+        </div>
+
+        <div class="bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+</body>
+</html>
